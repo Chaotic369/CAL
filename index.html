@@ -1,265 +1,521 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progressive Gain Tracker</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .card {
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        h2 {
-            margin-top: 0;
-            color: #4CAF50;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-            color: #bbb;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            background-color: #2c2c2c;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            width: 100%;
-            font-weight: bold;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            text-align: center;
-        }
-        .stat-box {
-            background-color: #2c2c2c;
-            padding: 15px;
-            border-radius: 6px;
-        }
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            text-align: left;
-            padding: 10px;
-            border-bottom: 1px solid #333;
-        }
-        th {
-            color: #bbb;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progressive Gain Tracker</title>
+<style>
+    :root {
+        --bg: #101110;
+        --card: #17191a;
+        --card-border: #262a29;
+        --accent: #6bcf7f;
+        --accent-dim: #3f7a4b;
+        --warn: #e0a955;
+        --danger: #d9695f;
+        --text: #eef0ee;
+        --text-dim: #9aa39c;
+        --mono: "SF Mono", "Roboto Mono", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 20px 16px 60px;
+    }
+    h1 {
+        font-size: 1.4em;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    h1 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .card {
+        background-color: var(--card);
+        border: 1px solid var(--card-border);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 18px;
+    }
+    h2 {
+        margin-top: 0;
+        font-size: 1.05em;
+        color: var(--accent);
+        border-bottom: 1px solid var(--card-border);
+        padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    h2 .step { font-size: 0.75em; color: var(--text-dim); font-weight: normal; font-family: var(--mono); }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 0.82em;
+        color: var(--text-dim);
+    }
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        background-color: #202322;
+        border: 1px solid #333;
+        color: var(--text);
+        border-radius: 6px;
+        font-size: 0.95em;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent-dim); }
+    button {
+        background-color: var(--accent);
+        color: #0c150e;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.95em;
+        font-weight: 700;
+        width: 100%;
+        transition: filter 0.15s;
+    }
+    button:hover { filter: brightness(1.08); }
+    button.secondary {
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid #333;
+        font-weight: 500;
+    }
+    button.secondary:hover { color: var(--text); border-color: #555; filter: none; }
+    button.icon-btn {
+        width: auto;
+        padding: 4px 9px;
+        background: transparent;
+        border: 1px solid #3a3a3a;
+        color: var(--text-dim);
+        font-weight: 400;
+        font-size: 0.85em;
+    }
+    button.icon-btn:hover { color: var(--danger); border-color: var(--danger); filter: none; }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+    .stat-box {
+        background-color: #202322;
+        padding: 14px 10px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .stat-label { font-size: 0.72em; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 1.4em; font-weight: 700; color: var(--accent); font-family: var(--mono); margin: 2px 0; }
+    .stat-sub { font-size: 0.72em; color: var(--text-dim); }
+    .bar-track { height: 5px; background: #2c2f2e; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+    .bar-fill.over { background: var(--danger); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+    th, td { text-align: left; padding: 9px 6px; border-bottom: 1px solid var(--card-border); }
+    th { color: var(--text-dim); font-weight: 500; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.3px; }
+    td.num { font-family: var(--mono); }
+    tr.empty-row td { color: var(--text-dim); text-align: center; padding: 20px; font-style: italic; }
+
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        color: var(--text);
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 0.88em;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s, transform 0.2s;
+        z-index: 10;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.err { border-color: var(--danger); color: var(--danger); }
+
+    footer { text-align: center; color: var(--text-dim); font-size: 0.78em; margin-top: 30px; }
+
+    @media (max-width: 480px) {
+        .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        .grid-2, .grid-2-1 { grid-template-columns: 1fr; }
+        table { font-size: 0.78em; }
+        th:nth-child(4), td:nth-child(4) { display: none; } /* hide fat col on tiny screens */
+    }
+</style>
 </head>
 <body>
 
-    <h1>Progressive Gain Tracker</h1>
+<h1><span class="dot"></span>Progressive Gain Tracker</h1>
 
-    <!-- PROFILE SECTION -->
-    <div class="card">
-        <h2>1. Set Baseline (Highly Active Locked)</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div>
-                <label>Gender</label>
-                <select id="gender">
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                </select>
-            </div>
-            <div>
-                <label>Age (years)</label>
-                <input type="number" id="age" value="25">
-            </div>
-            <div>
-                <label>Height (cm)</label>
-                <input type="number" id="height" value="175">
-            </div>
-            <div>
-                <label>Current Weight (kg)</label>
-                <input type="number" id="weight" value="70">
-            </div>
+<!-- PROFILE SECTION -->
+<div class="card">
+    <h2>Set Baseline <span class="step">01</span></h2>
+    <div class="grid-2">
+        <div>
+            <label>Gender</label>
+            <select id="gender">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
         </div>
-        <button onclick="calculateTargets()">Calculate Daily Targets</button>
-    </div>
-
-    <!-- TARGETS DASHBOARD -->
-    <div class="card">
-        <h2>2. Daily Surplus Targets</h2>
-        <div class="dashboard-grid">
-            <div class="stat-box">
-                <div class="stat-label">Calories</div>
-                <div class="stat-value" id="t-cal">0</div>
-                <small>kcal</small>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Protein</div>
-                <div class="stat-value" id="t-pro">0</div>
-                <small>g</small>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Fat</div>
-                <div class="stat-value" id="t-fat">0</div>
-                <small>g</small>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Carbs</div>
-                <div class="stat-value" id="t-carb">0</div>
-                <small>g</small>
-            </div>
+        <div>
+            <label>Age (years)</label>
+            <input type="number" id="age" value="25">
+        </div>
+        <div>
+            <label>Height (cm)</label>
+            <input type="number" id="height" value="175">
+        </div>
+        <div>
+            <label>Current Weight (kg)</label>
+            <input type="number" id="weight" value="70">
+        </div>
+        <div>
+            <label>Activity Level</label>
+            <select id="activity">
+                <option value="1.2">Sedentary (desk job, no exercise)</option>
+                <option value="1.375">Light (1-3 workouts/week)</option>
+                <option value="1.55">Moderate (3-5 workouts/week)</option>
+                <option value="1.725" selected>Highly Active (6-7 workouts/week)</option>
+                <option value="1.9">Athlete (2x/day training)</option>
+            </select>
+        </div>
+        <div>
+            <label>Daily Surplus (kcal)</label>
+            <input type="number" id="surplus" value="500">
         </div>
     </div>
+    <button onclick="calculateTargets()">Calculate Daily Targets</button>
+</div>
 
-    <!-- FOOD LOGGER SECTION -->
-    <div class="card">
-        <h2>3. High-Accuracy Food Log</h2>
-        <p style="font-size: 0.9em; color: #bbb;">Enter the nutritional value per 100g, and the exact weight you ate. The app will calculate the precise macros.</p>
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
-            <div>
-                <label>Food Name</label>
-                <input type="text" id="f-name" placeholder="Chicken">
-            </div>
-            <div>
-                <label>Protein / 100g</label>
-                <input type="number" id="f-pro" placeholder="31">
-            </div>
-            <div>
-                <label>Carbs / 100g</label>
-                <input type="number" id="f-carb" placeholder="0">
-            </div>
-            <div>
-                <label>Fat / 100g</label>
-                <input type="number" id="f-fat" placeholder="3.6">
-            </div>
-            <div>
-                <label>Eaten (grams)</label>
-                <input type="number" id="f-grams" placeholder="185">
-            </div>
+<!-- TARGETS DASHBOARD -->
+<div class="card">
+    <h2>Today's Targets vs. Logged <span class="step">02</span></h2>
+    <div class="dashboard-grid" id="dashboard"></div>
+</div>
+
+<!-- FOOD LOGGER SECTION -->
+<div class="card">
+    <h2>Food Log <span class="step">03</span></h2>
+    <p style="font-size:0.85em;color:var(--text-dim);margin-top:-4px;">Pick a food from the list (or add your own below) and enter the weight eaten.</p>
+    <div class="grid-2-1">
+        <div>
+            <label>Food Name</label>
+            <input type="text" id="f-name" list="food-options" placeholder="e.g., Chicken Breast">
+            <datalist id="food-options"></datalist>
         </div>
-        <button onclick="logFood()">Log Food</button>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Food</th>
-                    <th>Weight (g)</th>
-                    <th>Calories</th>
-                    <th>Protein (g)</th>
-                    <th>Fat (g)</th>
-                    <th>Carbs (g)</th>
-                </tr>
-            </thead>
-            <tbody id="food-table-body">
-                <!-- Food entries will appear here -->
-            </tbody>
-        </table>
+        <div>
+            <label>Eaten (grams)</label>
+            <input type="number" id="f-grams" placeholder="185">
+        </div>
     </div>
+    <button onclick="logFood()">Log Food</button>
 
-    <script>
-        // Core Algorithm Logic
-        function calculateTargets() {
-            const gender = document.getElementById('gender').value;
-            const age = parseFloat(document.getElementById('age').value);
-            const height = parseFloat(document.getElementById('height').value);
-            const weight = parseFloat(document.getElementById('weight').value);
+    <table>
+        <thead>
+            <tr>
+                <th>Food</th>
+                <th>g</th>
+                <th>Kcal</th>
+                <th>Fat</th>
+                <th>Pro</th>
+                <th>Carb</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="food-table-body"></tbody>
+    </table>
+    <button class="secondary" style="margin-top:12px;" onclick="clearLog()">Clear Today's Log</button>
+</div>
 
-            // Mifflin-St Jeor Equation
-            let bmr = (10 * weight) + (6.25 * height) - (5 * age);
-            bmr = gender === 'male' ? bmr + 5 : bmr - 161;
+<!-- CUSTOM FOOD SECTION -->
+<div class="card">
+    <h2>Add a Custom Food <span class="step">04</span></h2>
+    <p style="font-size:0.85em;color:var(--text-dim);margin-top:-4px;">Not in the list? Add macros per 100g once, and it's saved for next time.</p>
+    <div class="grid-2">
+        <div>
+            <label>Food Name</label>
+            <input type="text" id="c-name" placeholder="e.g., Greek Yogurt">
+        </div>
+        <div>
+            <label>Protein (g / 100g)</label>
+            <input type="number" id="c-pro" placeholder="10">
+        </div>
+        <div>
+            <label>Carbs (g / 100g)</label>
+            <input type="number" id="c-carb" placeholder="4">
+        </div>
+        <div>
+            <label>Fat (g / 100g)</label>
+            <input type="number" id="c-fat" placeholder="5">
+        </div>
+    </div>
+    <button onclick="addCustomFood()">Save Food to Database</button>
+</div>
 
-            // Highly Active Multiplier + 500 Calorie Surplus
-            const tdee = bmr * 1.725;
-            const targetCals = tdee + 500;
+<footer>Data is saved locally in this browser only.</footer>
+<div class="toast" id="toast"></div>
 
-            // Macro Split Calculation
-            const proteinGrams = weight * 2.2;
-            const fatGrams = weight * 1.0;
-            
-            const proteinCals = proteinGrams * 4;
-            const fatCals = fatGrams * 9;
-            
-            const remainingCals = targetCals - (proteinCals + fatCals);
-            const carbGrams = remainingCals / 4;
+<script>
+    const STORAGE_KEY = 'pgt_state_v2';
+    let state = loadState();
 
-            // Update UI
-            document.getElementById('t-cal').innerText = Math.round(targetCals);
-            document.getElementById('t-pro').innerText = Math.round(proteinGrams);
-            document.getElementById('t-fat').innerText = Math.round(fatGrams);
-            document.getElementById('t-carb').innerText = Math.round(carbGrams);
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {
+            console.warn('Could not read saved data, starting fresh.', e);
+        }
+        return {
+            profile: { gender: 'male', age: 25, height: 175, weight: 70, activity: 1.725, surplus: 500 },
+            targets: { cal: 0, pro: 0, fat: 0, carb: 0 },
+            log: [],
+            customFoods: {}
+        };
+    }
+
+    function saveState() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            showToast('Could not save data (storage full or blocked).', true);
+        }
+    }
+
+    function showToast(msg, isErr) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast show' + (isErr ? ' err' : '');
+        clearTimeout(showToast._h);
+        showToast._h = setTimeout(() => { t.className = 'toast'; }, 2200);
+    }
+
+    // Built-in food database (per 100g)
+    const baseFoodDatabase = {
+        "chicken breast": { pro: 31, carb: 0, fat: 3.6 },
+        "white rice": { pro: 2.7, carb: 28, fat: 0.3 },
+        "egg": { pro: 13, carb: 1.1, fat: 11 },
+        "oats": { pro: 16.9, carb: 66.3, fat: 6.9 },
+        "broccoli": { pro: 2.8, carb: 7, fat: 0.4 },
+        "beef (ground, 80/20)": { pro: 17, carb: 0, fat: 20 },
+        "sweet potato": { pro: 1.6, carb: 20, fat: 0.1 },
+        "salmon": { pro: 20, carb: 0, fat: 13 },
+        "peanut butter": { pro: 25, carb: 20, fat: 50 },
+        "whey protein": { pro: 80, carb: 10, fat: 5 },
+        "milk (whole)": { pro: 3.2, carb: 4.8, fat: 3.2 }
+    };
+
+    function fullFoodDatabase() {
+        return Object.assign({}, baseFoodDatabase, state.customFoods);
+    }
+
+    function populateFoodOptions() {
+        const dl = document.getElementById('food-options');
+        dl.innerHTML = '';
+        Object.keys(fullFoodDatabase()).forEach(key => {
+            const opt = document.createElement('option');
+            opt.value = key.replace(/\b\w/g, c => c.toUpperCase());
+            dl.appendChild(opt);
+        });
+    }
+
+    function applyProfileToInputs() {
+        document.getElementById('gender').value = state.profile.gender;
+        document.getElementById('age').value = state.profile.age;
+        document.getElementById('height').value = state.profile.height;
+        document.getElementById('weight').value = state.profile.weight;
+        document.getElementById('activity').value = state.profile.activity;
+        document.getElementById('surplus').value = state.profile.surplus;
+    }
+
+    function calculateTargets() {
+        const gender = document.getElementById('gender').value;
+        const age = parseFloat(document.getElementById('age').value);
+        const height = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        const activity = parseFloat(document.getElementById('activity').value);
+        const surplus = parseFloat(document.getElementById('surplus').value) || 0;
+
+        if ([age, height, weight].some(v => isNaN(v) || v <= 0)) {
+            showToast('Please enter valid age, height, and weight.', true);
+            return;
         }
 
-        // Exact Food Calculation Logic
-        function logFood() {
-            const name = document.getElementById('f-name').value || "Food Item";
-            const proPer100 = parseFloat(document.getElementById('f-pro').value) || 0;
-            const carbPer100 = parseFloat(document.getElementById('f-carb').value) || 0;
-            const fatPer100 = parseFloat(document.getElementById('f-fat').value) || 0;
-            const gramsEaten = parseFloat(document.getElementById('f-grams').value) || 0;
+        // Mifflin-St Jeor Equation
+        let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+        bmr = gender === 'male' ? bmr + 5 : bmr - 161;
 
-            if(gramsEaten === 0) return alert("Please enter the weight eaten in grams.");
+        const tdee = bmr * activity;
+        const targetCals = tdee + surplus;
 
-            // The Exact Formula
-            const exactPro = (proPer100 / 100) * gramsEaten;
-            const exactCarb = (carbPer100 / 100) * gramsEaten;
-            const exactFat = (fatPer100 / 100) * gramsEaten;
-            
-            // Calculate calories from exact macros
-            const exactCals = (exactPro * 4) + (exactCarb * 4) + (exactFat * 9);
+        const proteinGrams = weight * 2.2;
+        const fatGrams = weight * 1.0;
+        const proteinCals = proteinGrams * 4;
+        const fatCals = fatGrams * 9;
+        const remainingCals = targetCals - (proteinCals + fatCals);
+        const carbGrams = Math.max(remainingCals, 0) / 4;
 
-            // Add to Table
-            const tbody = document.getElementById('food-table-body');
-            const row = `<tr>
-                <td>${name}</td>
-                <td>${gramsEaten}</td>
-                <td>${Math.round(exactCals)}</td>
-                <td>${exactPro.toFixed(1)}</td>
-                <td>${exactFat.toFixed(1)}</td>
-                <td>${exactCarb.toFixed(1)}</td>
-            </tr>`;
-            tbody.innerHTML += row;
+        state.profile = { gender, age, height, weight, activity, surplus };
+        state.targets = {
+            cal: Math.round(targetCals),
+            pro: Math.round(proteinGrams),
+            fat: Math.round(fatGrams),
+            carb: Math.round(carbGrams)
+        };
+        saveState();
+        renderDashboard();
+        showToast('Targets updated.');
+    }
 
-            // Clear inputs
-            document.getElementById('f-name').value = '';
-            document.getElementById('f-pro').value = '';
-            document.getElementById('f-carb').value = '';
-            document.getElementById('f-fat').value = '';
-            document.getElementById('f-grams').value = '';
+    function loggedTotals() {
+        return state.log.reduce((acc, item) => {
+            acc.cal += item.cal; acc.pro += item.pro; acc.fat += item.fat; acc.carb += item.carb;
+            return acc;
+        }, { cal: 0, pro: 0, fat: 0, carb: 0 });
+    }
+
+    function renderDashboard() {
+        const t = state.targets;
+        const logged = loggedTotals();
+        const dash = document.getElementById('dashboard');
+        const rows = [
+            { label: 'Calories', unit: 'kcal', have: Math.round(logged.cal), target: t.cal },
+            { label: 'Protein', unit: 'g', have: Math.round(logged.pro), target: t.pro },
+            { label: 'Fat', unit: 'g', have: Math.round(logged.fat), target: t.fat },
+            { label: 'Carbs', unit: 'g', have: Math.round(logged.carb), target: t.carb }
+        ];
+        dash.innerHTML = rows.map(r => {
+            const pct = r.target > 0 ? Math.min((r.have / r.target) * 100, 100) : 0;
+            const over = r.target > 0 && r.have > r.target;
+            const remaining = r.target - r.have;
+            return `<div class="stat-box">
+                <div class="stat-label">${r.label}</div>
+                <div class="stat-value">${r.have}</div>
+                <div class="stat-sub">of ${r.target} ${r.unit}${over ? ` (+${remaining * -1})` : ''}</div>
+                <div class="bar-track"><div class="bar-fill${over ? ' over' : ''}" style="width:${pct}%"></div></div>
+            </div>`;
+        }).join('');
+    }
+
+    function logFood() {
+        const nameInput = document.getElementById('f-name').value.trim();
+        const gramsEaten = parseFloat(document.getElementById('f-grams').value) || 0;
+
+        if (!nameInput) return showToast('Please enter a food name.', true);
+        if (gramsEaten <= 0) return showToast('Please enter the weight eaten in grams.', true);
+
+        const foodKey = nameInput.toLowerCase();
+        const foodData = fullFoodDatabase()[foodKey];
+
+        if (!foodData) {
+            showToast(`"${nameInput}" isn't in the database yet — add it below.`, true);
+            return;
         }
-    </script>
+
+        const exactPro = (foodData.pro / 100) * gramsEaten;
+        const exactCarb = (foodData.carb / 100) * gramsEaten;
+        const exactFat = (foodData.fat / 100) * gramsEaten;
+        const exactCals = (exactPro * 4) + (exactCarb * 4) + (exactFat * 9);
+
+        state.log.push({
+            id: Date.now(),
+            name: nameInput,
+            grams: gramsEaten,
+            cal: exactCals,
+            pro: exactPro,
+            fat: exactFat,
+            carb: exactCarb
+        });
+        saveState();
+        renderFoodTable();
+        renderDashboard();
+
+        document.getElementById('f-name').value = '';
+        document.getElementById('f-grams').value = '';
+        showToast(`Logged ${nameInput}.`);
+    }
+
+    function removeLogEntry(id) {
+        state.log = state.log.filter(item => item.id !== id);
+        saveState();
+        renderFoodTable();
+        renderDashboard();
+    }
+
+    function clearLog() {
+        if (state.log.length === 0) return;
+        if (!confirm("Clear today's entire food log?")) return;
+        state.log = [];
+        saveState();
+        renderFoodTable();
+        renderDashboard();
+        showToast('Log cleared.');
+    }
+
+    function renderFoodTable() {
+        const tbody = document.getElementById('food-table-body');
+        if (state.log.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No food logged yet today.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = state.log.map(item => `<tr>
+            <td>${escapeHtml(item.name)}</td>
+            <td class="num">${item.grams}</td>
+            <td class="num">${Math.round(item.cal)}</td>
+            <td class="num">${item.fat.toFixed(1)}</td>
+            <td class="num">${item.pro.toFixed(1)}</td>
+            <td class="num">${item.carb.toFixed(1)}</td>
+            <td><button class="icon-btn" onclick="removeLogEntry(${item.id})">✕</button></td>
+        </tr>`).join('');
+    }
+
+    function addCustomFood() {
+        const name = document.getElementById('c-name').value.trim();
+        const pro = parseFloat(document.getElementById('c-pro').value);
+        const carb = parseFloat(document.getElementById('c-carb').value);
+        const fat = parseFloat(document.getElementById('c-fat').value);
+
+        if (!name) return showToast('Please enter a food name.', true);
+        if ([pro, carb, fat].some(v => isNaN(v) || v < 0)) {
+            return showToast('Please enter valid macro values (0 or more).', true);
+        }
+
+        state.customFoods[name.toLowerCase()] = { pro, carb, fat };
+        saveState();
+        populateFoodOptions();
+        showToast(`Saved "${name}" to your food database.`);
+
+        document.getElementById('c-name').value = '';
+        document.getElementById('c-pro').value = '';
+        document.getElementById('c-carb').value = '';
+        document.getElementById('c-fat').value = '';
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Init
+    applyProfileToInputs();
+    populateFoodOptions();
+    renderDashboard();
+    renderFoodTable();
+</script>
 </body>
 </html>
