@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progressive Gain Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h2 {
+            margin-top: 0;
+            color: #4CAF50;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #bbb;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        .stat-box {
+            background-color: #2c2c2c;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Progressive Gain Tracker</h1>
+
+    <!-- PROFILE SECTION -->
+    <div class="card">
+        <h2>1. Set Baseline (Highly Active Locked)</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+                <label>Gender</label>
+                <select id="gender">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+            <div>
+                <label>Age (years)</label>
+                <input type="number" id="age" value="25">
+            </div>
+            <div>
+                <label>Height (cm)</label>
+                <input type="number" id="height" value="175">
+            </div>
+            <div>
+                <label>Current Weight (kg)</label>
+                <input type="number" id="weight" value="70">
+            </div>
+        </div>
+        <button onclick="calculateTargets()">Calculate Daily Targets</button>
+    </div>
+
+    <!-- TARGETS DASHBOARD -->
+    <div class="card">
+        <h2>2. Daily Surplus Targets</h2>
+        <div class="dashboard-grid">
+            <div class="stat-box">
+                <div class="stat-label">Calories</div>
+                <div class="stat-value" id="t-cal">0</div>
+                <small>kcal</small>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Protein</div>
+                <div class="stat-value" id="t-pro">0</div>
+                <small>g</small>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Fat</div>
+                <div class="stat-value" id="t-fat">0</div>
+                <small>g</small>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Carbs</div>
+                <div class="stat-value" id="t-carb">0</div>
+                <small>g</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOD LOGGER SECTION -->
+    <div class="card">
+        <h2>3. High-Accuracy Food Log</h2>
+        <p style="font-size: 0.9em; color: #bbb;">Enter the nutritional value per 100g, and the exact weight you ate. The app will calculate the precise macros.</p>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+            <div>
+                <label>Food Name</label>
+                <input type="text" id="f-name" placeholder="Chicken">
+            </div>
+            <div>
+                <label>Protein / 100g</label>
+                <input type="number" id="f-pro" placeholder="31">
+            </div>
+            <div>
+                <label>Carbs / 100g</label>
+                <input type="number" id="f-carb" placeholder="0">
+            </div>
+            <div>
+                <label>Fat / 100g</label>
+                <input type="number" id="f-fat" placeholder="3.6">
+            </div>
+            <div>
+                <label>Eaten (grams)</label>
+                <input type="number" id="f-grams" placeholder="185">
+            </div>
+        </div>
+        <button onclick="logFood()">Log Food</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Food</th>
+                    <th>Weight (g)</th>
+                    <th>Calories</th>
+                    <th>Protein (g)</th>
+                    <th>Fat (g)</th>
+                    <th>Carbs (g)</th>
+                </tr>
+            </thead>
+            <tbody id="food-table-body">
+                <!-- Food entries will appear here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Core Algorithm Logic
+        function calculateTargets() {
+            const gender = document.getElementById('gender').value;
+            const age = parseFloat(document.getElementById('age').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+
+            // Mifflin-St Jeor Equation
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+            bmr = gender === 'male' ? bmr + 5 : bmr - 161;
+
+            // Highly Active Multiplier + 500 Calorie Surplus
+            const tdee = bmr * 1.725;
+            const targetCals = tdee + 500;
+
+            // Macro Split Calculation
+            const proteinGrams = weight * 2.2;
+            const fatGrams = weight * 1.0;
+            
+            const proteinCals = proteinGrams * 4;
+            const fatCals = fatGrams * 9;
+            
+            const remainingCals = targetCals - (proteinCals + fatCals);
+            const carbGrams = remainingCals / 4;
+
+            // Update UI
+            document.getElementById('t-cal').innerText = Math.round(targetCals);
+            document.getElementById('t-pro').innerText = Math.round(proteinGrams);
+            document.getElementById('t-fat').innerText = Math.round(fatGrams);
+            document.getElementById('t-carb').innerText = Math.round(carbGrams);
+        }
+
+        // Exact Food Calculation Logic
+        function logFood() {
+            const name = document.getElementById('f-name').value || "Food Item";
+            const proPer100 = parseFloat(document.getElementById('f-pro').value) || 0;
+            const carbPer100 = parseFloat(document.getElementById('f-carb').value) || 0;
+            const fatPer100 = parseFloat(document.getElementById('f-fat').value) || 0;
+            const gramsEaten = parseFloat(document.getElementById('f-grams').value) || 0;
+
+            if(gramsEaten === 0) return alert("Please enter the weight eaten in grams.");
+
+            // The Exact Formula
+            const exactPro = (proPer100 / 100) * gramsEaten;
+            const exactCarb = (carbPer100 / 100) * gramsEaten;
+            const exactFat = (fatPer100 / 100) * gramsEaten;
+            
+            // Calculate calories from exact macros
+            const exactCals = (exactPro * 4) + (exactCarb * 4) + (exactFat * 9);
+
+            // Add to Table
+            const tbody = document.getElementById('food-table-body');
+            const row = `<tr>
+                <td>${name}</td>
+                <td>${gramsEaten}</td>
+                <td>${Math.round(exactCals)}</td>
+                <td>${exactPro.toFixed(1)}</td>
+                <td>${exactFat.toFixed(1)}</td>
+                <td>${exactCarb.toFixed(1)}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+
+            // Clear inputs
+            document.getElementById('f-name').value = '';
+            document.getElementById('f-pro').value = '';
+            document.getElementById('f-carb').value = '';
+            document.getElementById('f-fat').value = '';
+            document.getElementById('f-grams').value = '';
+        }
+    </script>
+</body>
+</html>
